@@ -4,6 +4,9 @@ import os
 import time
 import argparse
 from astropy.io import fits
+#from astropy.io import fits as pf
+import sunpy.map
+from sunpy.io.fits import header_to_fits as htf
 
 # To deactivate warnings: https://github.com/tensorflow/tensorflow/issues/7778
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
@@ -23,25 +26,35 @@ import models as nn_model
 
 class enhance(object):
 
-    def __init__(self, inputFile, depth, model, activation, ntype, output):
+    def __init__(self, inputFile, depth, model, activation, ntype, output, rtype='fits'):
 
 # Only allocate needed memory
         config = tf.ConfigProto()
         config.gpu_options.allow_growth=True
         session = tf.Session(config=config)
         ktf.set_session(session)
-        self.hdu = fits.open(inputFile)
+        
+        if type(inputFile) == str:
+            #if you put input as string, it will try to open it
+            self.hdu = fits.open(inputFile)
         #Autofix broken header files according to fits standard
-        self.hdu.verify('silentfix')
-        self.image = self.hdu[0].data
-        self.header = self.hdu[0].header
+            self.hdu.verify('silentfix')
+            self.image = self.hdu[0].data
+            self.header = self.hdu[0].header
+        else:
+            #assume its sunpy map
+            #extract data to numpy array
+            self.image = inputFile.data
+            #extract header to standard astropy fits header type
+            self.header = htf(inputFile.meta)
 
-        self.input = inputFile
+
         self.depth = depth
         self.network_type = model
         self.activation = activation
         self.ntype = ntype
         self.output = output
+        self.rtype = rtype
 
 
     def define_network(self): #, image):
@@ -109,6 +122,9 @@ class enhance(object):
             self.header['naxis1'] = new_dim[1]
             self.header['naxis2'] = new_dim[0]
 
+        if self.rtype == 'spmap':
+            return sunpy.map.Map(new_data, self.header)
+
         print("Saving data...")
         hdu = fits.PrimaryHDU(new_data, self.header)
         import os.path
@@ -116,6 +132,7 @@ class enhance(object):
             os.system('rm {0}'.format(self.output))
             print('Overwriting...')
         hdu.writeto('{0}'.format(self.output))
+        ktf.clear_session()
 
         # import matplotlib.pyplot as plt
         # plt.imshow(out[0,:,:,0])
