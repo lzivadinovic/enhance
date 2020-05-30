@@ -32,7 +32,6 @@ class enhance(object):
 
     def __init__(self, inputFile, depth, model, activation, ntype, output, rtype='fits'):
 
-<<<<<<< HEAD
 # Only allocate needed memory
         config = tf.ConfigProto()
         config.gpu_options.allow_growth=True
