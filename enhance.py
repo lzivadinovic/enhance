@@ -9,12 +9,15 @@ import os
 import time
 import argparse
 from astropy.io import fits
-import sunpy.map
+from sunpy.map import Map as spmapa
 from sunpy.io.fits import header_to_fits as htf
 import tensorflow as tf
 import keras as krs
 import keras.backend.tensorflow_backend as ktf
-import models as nn_model
+#import models as nn_model
+from .models import *
+import pkg_resources
+
 
 # To deactivate warnings: https://github.com/tensorflow/tensorflow/issues/7778
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
@@ -41,7 +44,7 @@ class enhance(object):
         if type(inputFile) == str:
             #if you put input as string, it will try to open it
             self.hdu = fits.open(inputFile)
-        #Autofix broken header files according to fits standard
+            #Autofix broken header files according to fits standard
             self.hdu.verify('silentfix')
             index = 0
             if np.all(self.hdu[index].data == None): index = 1
@@ -83,10 +86,12 @@ class enhance(object):
             self.ny = int(self.image.shape[0]/2)
 
         if (self.network_type == 'keepsize'):
-            self.model = nn_model.keepsize(self.ny, self.nx, 0.0, self.depth,n_filters=64, l2_reg=1e-7)
+            self.model = keepsize(self.ny, self.nx, 0.0, self.depth,n_filters=64, l2_reg=1e-7)
 
         print("Loading weights...")
-        self.model.load_weights("network/{0}_weights.hdf5".format(self.ntype))
+        network_path = pkg_resources.resource_filename(__name__, \
+                "network/{0}_weights.hdf5".format(self.ntype))
+        self.model.load_weights(network_path)
 
     def predict_image(self,inputdata):
         # Patch for big images in keras
@@ -149,7 +154,7 @@ class enhance(object):
             self.header['naxis2'] = new_dim[0]
 
         if self.rtype == 'spmap':
-            return sunpy.map.Map(new_data, self.header)
+            return spmapa(new_data, self.header)
 
         print("Saving data...")
         hdu = fits.PrimaryHDU(new_data, self.header)
