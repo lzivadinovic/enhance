@@ -33,9 +33,9 @@ print('keras version:',krs.__version__)
 
 class enhance(object):
 
-    def __init__(self, inputFile, depth, model, activation, ntype, output, rtype='fits'):
+    def __init__(self, inputFile, depth, model, activation, ntype, output='to_obj', rtype='fits'):
 
-# Only allocate needed memory
+    # Only allocate needed memory
         config = tf.ConfigProto()
         config.gpu_options.allow_growth=True
         session = tf.Session(config=config)
@@ -62,7 +62,8 @@ class enhance(object):
         self.network_type = model
         self.activation = activation
         self.ntype = ntype
-        self.output = output
+        if output == 'to_obj':
+            self.output = output
         self.rtype = rtype
         self.big_image = 2048
         self.split = False
@@ -156,16 +157,17 @@ class enhance(object):
         if self.rtype == 'spmap':
             return spmapa(new_data, self.header)
 
-        print("Saving data...")
-        hdu = fits.PrimaryHDU(new_data, self.header)
-        import os.path
-        if os.path.exists(self.output):
-            os.system('rm {0}'.format(self.output))
-            print('Overwriting...')
-        # import matplotlib.pyplot as plt
-        # plt.imshow(out[0,:,:,0])
-        # plt.savefig('hmi.pdf')
-        hdu.writeto('{0}'.format(self.output), output_verify="ignore")
+        if output != "to_obj":
+            print("Saving data...")
+            hdu = fits.PrimaryHDU(new_data, self.header)
+            import os.path
+            if os.path.exists(self.output):
+                os.system('rm {0}'.format(self.output))
+                print('Overwriting...')
+            # import matplotlib.pyplot as plt
+            # plt.imshow(out[0,:,:,0])
+            # plt.savefig('hmi.pdf')
+            hdu.writeto('{0}'.format(self.output), output_verify="ignore")
         ktf.clear_session()
 
         if plot_option is True:
