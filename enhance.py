@@ -48,15 +48,15 @@ class enhance(object):
             self.hdu.verify('silentfix')
             index = 0
             if np.all(self.hdu[index].data == None): index = 1
+            self.image = np.nan_to_num(self.hdu[index].data[:,:])                
             self.norm = np.nanmean(self.hdu[index].data[:,:])
-            self.image = np.nan_to_num(self.hdu[index].data[:,:])
             self.header = self.hdu[index].header
             print('Size image: ',self.image.shape)
         else:
             #assume its sunpy map
             #extract data to numpy array
-            self.norm = np.nanmean(inputFile.data)
             self.image = np.nan_to_num(inputFile.data)
+            self.norm = np.nanmean(inputFile.data)
             #extract header to standard astropy fits header type
             self.header = htf(inputFile.meta)
 
