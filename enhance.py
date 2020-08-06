@@ -49,14 +49,14 @@ class enhance(object):
             index = 0
             if np.all(self.hdu[index].data == None): index = 1
             self.image = np.nan_to_num(self.hdu[index].data[:,:])                
-            self.norm = np.nanmean(self.hdu[index].data[:,:])
+            #self.norm = np.nanmean(self.hdu[index].data[:,:])
             self.header = self.hdu[index].header
             print('Size image: ',self.image.shape)
         else:
             #assume its sunpy map
             #extract data to numpy array
             self.image = np.nan_to_num(inputFile.data)
-            self.norm = np.nanmean(inputFile.data)
+            #self.norm = np.nanmean(inputFile.data)
             #extract header to standard astropy fits header type
             self.header = htf(inputFile.meta)
 
@@ -69,12 +69,12 @@ class enhance(object):
         self.rtype = rtype
         self.big_image = 2048
         self.split = False
-        #self.norm = 1.0
+        self.norm = 1.0
 
-        #if self.ntype == 'intensity': 
-        #    self.norm = np.max(self.image)
-        #if self.ntype == 'blos': 
-        #    self.norm = 1e3
+        if self.ntype == 'intensity': 
+            self.norm = np.nanmean(self.image)
+        if self.ntype == 'blos': 
+            self.norm = 1e3
         
         self.image = self.image/self.norm
 
